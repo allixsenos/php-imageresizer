@@ -27,6 +27,7 @@
      - make sure $approot is correct
      - make sure you have /usr/bin/convert
      - make sure the RewriteRule has the correct path to the script
+     - adjust $nice to suite your needs (the default 10 should ensure resizer doesn't hog the spotlight)
 
 */
 
@@ -41,7 +42,9 @@ if (get_magic_quotes_gpc()) {
 
 chdir($approot = ".."); // force current working directory to app root
 
-$convert = "/usr/bin/convert";
+$nice = "nice -n 10 ";
+
+$convert = $nice."/usr/bin/convert";
 
 $source = ifsetor($_GET['from']);
 
@@ -58,10 +61,14 @@ if (!$res)
 $resizeto = 0;
 if (preg_match("@^x[0-9]+$@", $res)) {
     $resizeto = $res;
+    $hintwidth = $hintheight = 2*$res;
 } elseif (preg_match("@([0-9]+)x([0-9]+)@", $res, $matches)) {
     $width = $matches[1];
     $height = $matches[2];
-    
+
+    $hintwidth = 2*$matches[1];
+    $hintheight = 2*$matches[2];
+
     $newratio = $width/$height;
     $oldimg = imagecreatefromjpeg($source);
     $oldratio = imagesx($oldimg)/imagesy($oldimg);
@@ -73,6 +80,8 @@ if (preg_match("@^x[0-9]+$@", $res)) {
 } elseif (isintstr($res)) {
     $width = $res;
     $height = null;
+
+    $hintwidth = $hintheight = 2*$res;
 } else {
     die ("Bad dimensions");
 }
@@ -80,7 +89,7 @@ $resizeto = ($resizeto)?$resizeto:$width;
 
 
 $crop_cmd = ($height)?" -gravity Center -crop {$width}x{$height}+0+0 ":"";
-@exec ($x = "{$convert} -thumbnail {$resizeto} {$crop_cmd} \"{$source}\" \"{$target}\"");
+@exec ($x = "{$convert} -define jpeg:size={$hintwidth}x{$hintheight} -thumbnail {$resizeto} {$crop_cmd} \"{$source}[0]\" \"{$target}\"");
 
 // did the convert work?
 if (is_file($target)) {
