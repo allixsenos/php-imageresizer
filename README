@@ -20,3 +20,4 @@ CONFIGURATION
  - make sure $approot is correct
  - make sure you have /usr/bin/convert
  - make sure the RewriteRule has the correct path to the script
+ - adjust $nice to suite your needs (the default 10 should ensure resizer doesn't hog the spotlight)
